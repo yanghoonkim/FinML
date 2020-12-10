@@ -3,3 +3,4 @@ pandas
 pandas-datareader
 scipy
 matplotlib
+sspipe
