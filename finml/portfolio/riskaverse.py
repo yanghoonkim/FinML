@@ -1,10 +1,3 @@
-''' Meta Data '''
-__title__ = 'risk averse optimization'
-__version__ = '1.0.0'
-__author__ = 'Kiyoung Kim (kky416@snu.ac.kr)'
-__license__ = 'MIT'
-__copyright__ = 'Copyright 2020 by Kiyoung Kim'
-
 ''' Essential packages '''
 import numpy as np
 

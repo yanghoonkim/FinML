@@ -1,10 +1,3 @@
-''' Meta Data '''
-__title__ = 'mean variance portfolio optimization'
-__version__ = '1.0.0'
-__author__ = 'Kiyoung Kim (kky416@snu.ac.kr)'
-__license__ = 'MIT'
-__copyright__ = 'Copyright 2020 by Kiyoung Kim'
-
 ''' Essential packages '''
 import os
 import pickle
@@ -24,10 +17,11 @@ class StockMarket:
         self.data_path = os.path.join(self.pwd, 'data')
         if not os.path.exists(self.data_path): os.makedirs(self.data_path)
 
-    def get_stock_price(self, symbols):
+    def get_stock_price(self, symbols, log_return=True):
         '''
         args:
             symbols: list of stock symbols, e.g. ['AAPL', 'AMZN', 'GOOGL']
+            log_return: boolean. log return
         '''
         # File name starts with dates
         prefix = datetime.now().strftime('%Y%m%d')
@@ -48,7 +42,8 @@ class StockMarket:
             self.price_data[symbol] = price_data
 
         for symbol, df in self.price_data.items():
-            df['return'] = df['Adj Close'].pct_change()
+            df.sort_index(ascending=False, inplace=True)
+            df['return'] =  np.log(df['Adj Close'].shift(1) / df['Adj Close']) if log_return else df['Adj Close'].shift(1) / df['Adj Close']-1
             self.price_data[symbol] = df.dropna() # remove rows with NaN
 
             
@@ -69,4 +64,4 @@ class StockMarket:
         mean_return = np.array(df_return.mean()).reshape(len(self.price_data), 1)
         covariance = np.array(df_return.cov())
 
-        return df_return.columns, mean_return, covariance
+        return mean_return, covariance, df_return.columns
