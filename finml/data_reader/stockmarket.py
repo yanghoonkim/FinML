@@ -1,6 +1,6 @@
 ''' Essential packages '''
 import os
-import pickle
+import pickle as pkl
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -31,11 +31,11 @@ class StockMarket:
         for symbol in symbols:
             if prefix+symbol in done_list:
                 with open(os.path.join(self.data_path, prefix+symbol+'.pkl'), 'rb') as f:
-                    price_data = pickle.load(f)
+                    price_data = pkl.load(f)
             else:
                 price_data = pdr.DataReader(symbol, 'yahoo', start=datetime(2000,1,1), end=self.end_date)
                 with open(os.path.join(self.data_path, prefix+symbol+'.pkl'), 'wb') as f:
-                    pickle.dump(price_data, f)
+                    pkl.dump(price_data, f)
             
             price_data = price_data[self.start_date <= price_data.index]
             price_data = price_data[price_data.index <= self.end_date]
