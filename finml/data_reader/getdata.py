@@ -5,6 +5,8 @@ from datetime import datetime
 import pandas as pd
 import pandas_datareader as pdr
 import requests
+import lxml
+from lxml.html import fromstring
 
 
 class GetInitData:
@@ -16,6 +18,8 @@ class GetInitData:
         self.source = source
         self.tickers = None
         self.prices = pd.DataFrame()
+        self.fss = pd.DataFrame()
+        self.indicators = pd.DataFrame()
         
         self.data_path = os.path.join(data_path, self.source)
         if not os.path.exists(self.data_path):
@@ -73,7 +77,6 @@ class GetInitData:
             os.mkdir(price_path)
             
         if not os.path.exists(prices_path) or initialize == True:
-            
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     price_data = pdr.DataReader(ticker, 'naver', start=start_date, end=end_date)[['Close']]
@@ -93,17 +96,20 @@ class GetInitData:
                 
     
     def get_fs(self, initialize=False):
-        ''' Get financial statement with pandas'''
+        ''' Get financial statement with pandas
+        args:
+            initialize: if True, ignore existing financial statement data and initialize
+        '''
         if self.tickers is None:
             raise ValueError('ticker is not initialized')
         
         fs_path = os.path.join(self.data_path, 'fs')
+        fss_path = os.path.join(self.data_path, 'fss.pkl')
         
         if not os.path.exists(fs_path):
             os.mkdir(fs_path)
         
         if len(os.listdir(fs_path)) == 0 or initialize == True:
-    
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     fs_url = 'http://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?pGB=1&gicode=A%s' %ticker
@@ -136,15 +142,79 @@ class GetInitData:
                     # Refinement
                     fs_data.iloc[:, 0] = fs_data.iloc[:, 0].str.replace('계산에 참여한 계정 펼치기', '', regex=False)
                     fs_data = fs_data.drop_duplicates(fs_data.columns[0], keep='first')
-                    fs_data.index = fs_data.iloc[:, 0]
-                    fs_data = fs_data.drop(columns = fs_data.columns[0])
-                    valid_cols = [col for col in fs_data.columns if col.endswith('/12')]
-                    fs_data = fs_data[valid_cols]
+                    fs_data = fs_data.set_index(keys=fs_data.columns[0])
+                    last_col = fs_data.columns[-1] # last quarter
+                    fs_data = fs_data.drop(columns=last_col)
+                    #valid_cols = [col for col in fs_data.columns if col.endswith('/12')]
+                    #fs_data = fs_data[valid_cols]
                     
                     with open(os.path.join(fs_path, ticker)+'.pkl', 'wb') as f:
                         pkl.dump(fs_data, f)
+                    last_fs = fs_data.iloc[:, [-1]]
+                    last_fs.index.name = 'index'
+                    last_fs.columns = [ticker]
+                    
+                    self.fss = pd.concat([self.fss, last_fs], axis=1)
+                
+                with open(fss_path, 'wb') as f:
+                    pkl.dump(self.fss, f)
                         
             print('Complete!')
             
         else:
-            print('Financial statements are already downloaded')
+            print('Load financial statement (last year): %s' %fss_path)
+            with open(fss_path, 'rb') as f:
+                self.fss = pkl.load(f)
+        
+    
+    def compute_indicators(self, initialize=False):
+        ''' Calculate investment indicators (currently: PER/PBR/PCR/PSR)
+        args:
+            initialize: if True, ignore computed indicators and initialize
+        '''
+        if self.tickers is None:
+            raise ValueError('ticker is not initialized')    
+        
+        indicator_path = os.path.join(self.data_path, 'indicator')
+        indicators_path = os.path.join(self.data_path, 'indicators.pkl')
+        
+        if not os.path.exists(indicator_path):
+            os.mkdir(indicator_path)
+        
+        if not os.path.exists(indicators_path) or initialize == True:
+            if self.source == 'krx':
+                for ticker in tqdm(self.tickers['종목코드']):
+                    try:
+                        fs_data = self.fss.loc[:,[ticker]]
+                        last_col = fs_data.columns[-1]
+                        earnings = '지배주주순이익' if '지배주주순이익' in fs_data.index else '당기순이익'
+                        denominator = fs_data.loc[[earnings, '자본', '영업활동으로인한현금흐름', '매출액'], [last_col]]
+
+                        url = 'http://comp.fnguide.com/SVO2/ASP/SVD_main.asp?pGB=1&gicode=A%s' %ticker
+                        page = requests.get(url)
+                        parser = fromstring(page.text)
+                        xpath_price = '//*[@id="svdMainChartTxt11"]'
+                        xpath_num_issued = '//*[@id="svdMainGrid1"]/table/tbody/tr[7]/td[1]'
+                        price = float(parser.xpath(xpath_price)[0].text.replace(',',''))
+                        num_issued = float(parser.xpath(xpath_num_issued)[0].text.split('/')[0].replace(',','')) # only common share
+
+                    except: 
+                        print('Error in ticker: %s' %ticker)
+                        continue
+                    
+
+                    indicator = price / (denominator * 1e8 / num_issued)
+
+                    # Set names
+                    indicator.index.name = 'indicator'
+                    indicator.index = ['PER', 'PBR', 'PCR', 'PSR']
+                    indicator.columns = [ticker]
+                    
+                    with open(os.path.join(indicator_path, ticker)+'.pkl', 'wb') as f:
+                        pkl.dump(indicator, f)
+                    self.indicators = pd.concat([self.indicators, indicator], axis=1)
+        
+        else:
+            print('Load indicators: %s' %indicators_path)
+            with open(indicators_path, 'rb') as f:
+                self.indicators = pkl.load(f)
