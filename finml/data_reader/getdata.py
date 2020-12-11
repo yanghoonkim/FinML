@@ -77,6 +77,7 @@ class GetInitData:
             os.mkdir(price_path)
             
         if not os.path.exists(prices_path) or initialize == True:
+            print('Get prices from [naver] ...', end='')
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     price_data = pdr.DataReader(ticker, 'naver', start=start_date, end=end_date)[['Close']]
@@ -110,6 +111,7 @@ class GetInitData:
             os.mkdir(fs_path)
         
         if len(os.listdir(fs_path)) == 0 or initialize == True:
+            print('Get financial statements from [fnguide] ...', end='')
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     fs_url = 'http://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?pGB=1&gicode=A%s' %ticker
@@ -182,6 +184,7 @@ class GetInitData:
             os.mkdir(indicator_path)
         
         if not os.path.exists(indicators_path) or initialize == True:
+            print('Compute investment indicators ...')
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     try:
@@ -213,7 +216,11 @@ class GetInitData:
                     with open(os.path.join(indicator_path, ticker)+'.pkl', 'wb') as f:
                         pkl.dump(indicator, f)
                     self.indicators = pd.concat([self.indicators, indicator], axis=1)
-        
+
+                with open(indicators_path, 'wb') as f:
+                    pkl.dump(self.indicators, f)
+
+            print('Complete!')
         else:
             print('Load indicators: %s' %indicators_path)
             with open(indicators_path, 'rb') as f:
