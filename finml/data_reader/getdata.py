@@ -8,6 +8,8 @@ import requests
 import lxml
 from lxml.html import fromstring
 
+from math import nan
+
 
 class GetInitData:
     def __init__(self, source='krx', data_path = 'data'):
@@ -236,6 +238,7 @@ class GetInitData:
                     
 
                     indicator = price / (denominator * 1e8 / num_issued)
+                    indicator[indicator < 0] = nan
 
                     # Set names
                     indicator.index.name = 'indicator'
