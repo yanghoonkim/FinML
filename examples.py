@@ -9,7 +9,7 @@ kor_market = GetInitData(source='krx', data_path = 'data')
 kor_market.get_tickers(initialize=False)
 kor_market.get_prices(initialize=False)
 kor_market.get_fs(initialize=False)
-kor_market.compute_indicators(initialize=False)
+kor_market.calculate_indicators(initialize=False)
 
 # get market data
 market = StockMarket(start_date=datetime(2018,1,1), end_date=datetime.now())

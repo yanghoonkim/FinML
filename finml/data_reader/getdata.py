@@ -169,10 +169,10 @@ class GetInitData:
                 self.fss = pkl.load(f)
         
     
-    def compute_indicators(self, initialize=False):
+    def calculate_indicators(self, initialize=False):
         ''' Calculate investment indicators (currently: PER/PBR/PCR/PSR)
         args:
-            initialize: if True, ignore computed indicators and initialize
+            initialize: if True, ignore calculated indicators and initialize
         '''
         if self.tickers is None:
             raise ValueError('ticker is not initialized')    
@@ -184,7 +184,7 @@ class GetInitData:
             os.mkdir(indicator_path)
         
         if not os.path.exists(indicators_path) or initialize == True:
-            print('Compute investment indicators ...')
+            print('Calculate investment indicators ...')
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     try:
