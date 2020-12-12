@@ -2,7 +2,7 @@ from datetime import datetime
 
 from finml.data_reader import GetInitData
 from finml.data_reader import StockMarket
-from finml.portfolio import SimpleMeanVariance
+from finml.portfolio_optimization import SimpleMeanVariance
 
 # Get market data
 kor_market = GetInitData(source='krx', data_path = 'data')
