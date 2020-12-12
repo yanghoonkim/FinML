@@ -26,10 +26,9 @@ def lowVol(market, last_nyears=1, num_pf=30, interval='d'):
         n_units = 1
         
     std = returns.std(axis=0, skipna=True) * sqrt(n_units) # annualize
-    print(std)
     std[std == 0] = nan # Get rid of non-traded stocks
     
-    # rank
+    # Ranking: the smaller, the better 
     ranked = std[std.rank(ascending=True)<= num_pf]
     tickers = ranked.index
     
