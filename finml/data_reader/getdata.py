@@ -60,8 +60,8 @@ class GetInitData:
             
         
     def get_prices(self, 
-                   start_date=datetime(2010, 1, 1), 
-                   end_date=datetime.now(), 
+                   start=datetime(2010, 1, 1), 
+                   end=datetime.now(), 
                    initialize=False):
         ''' Get stock prices with pandas-datareader
         args:
@@ -80,12 +80,14 @@ class GetInitData:
             print('Get prices from [naver] ...', end='')
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
-                    price_data = pdr.DataReader(ticker, 'naver', start=start_date, end=end_date)[['Close']]
+                    price_data = pdr.DataReader(ticker, 'naver', start=start, end=end)[['Close']]
                     price_data = price_data.rename(columns={'Close': ticker})
+                    price_data = price_data.astype('float64')
                     with open(os.path.join(price_path, ticker)+'.pkl', 'wb') as f:
                         pkl.dump(price_data, f)
                     self.prices = pd.concat([self.prices, price_data], axis=1)
-            
+                self.prices = self.prices.astype('float64')
+                
             with open(prices_path, 'wb') as f:
                 pkl.dump(self.prices, f)
             print('Complete!')
@@ -167,6 +169,33 @@ class GetInitData:
             print('Load financial statement (last year): %s' %fss_path)
             with open(fss_path, 'rb') as f:
                 self.fss = pkl.load(f)
+    
+    
+    def calculate_returns(self, 
+                          interval='d', 
+                          start=datetime(2010, 1, 1), 
+                          end=datetime.now(), initialize=False):
+        ''' Calculate returns
+        args:
+            interval: 'd' (daily), 'w' (weekly), 'm' (monthly), and 'y' (annual)
+            initialize: if True, ignore calculated returns and initialize
+        returns:
+            returns: dataframe of float64
+        '''
+        if self.prices.empty:
+            raise ValueError('prices are not initialized')
+        
+        
+        prices = self.prices
+        prices = prices[start <= prices.index]
+        prices = prices[prices.index <= end]
+        
+        if interval == 'd':
+            returns = prices.pct_change()
+            returns = returns.dropna(axis=0, how='all')
+            
+        return returns
+    
         
     
     def calculate_indicators(self, initialize=False):
