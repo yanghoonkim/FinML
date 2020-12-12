@@ -174,7 +174,7 @@ class GetInitData:
     def calculate_returns(self, 
                           interval='d', 
                           start=datetime(2010, 1, 1), 
-                          end=datetime.now(), initialize=False):
+                          end=datetime.now()):
         ''' Calculate returns
         args:
             interval: 'd' (daily), 'w' (weekly), 'm' (monthly), and 'y' (annual)
@@ -190,9 +190,9 @@ class GetInitData:
         prices = prices[start <= prices.index]
         prices = prices[prices.index <= end]
         
-        if interval == 'd':
-            returns = prices.pct_change()
-            returns = returns.dropna(axis=0, how='all')
+        # Calculate return (related to the given time interval)
+        returns = prices.resample(interval).ffill().pct_change()
+        returns = returns.dropna(axis=0, how='all')
             
         return returns
     
