@@ -14,7 +14,7 @@ def momentum(market, last_nyears=1, num_pf=30):
         start = market.prices.index[0]
     
     returns = market.calculate_returns(interval='d', start=start)
-    accumulated_returns = (returns+1).prod(axis=0)
+    accumulated_returns = (returns+1).prod(axis=0, skipna=True)
     
     # Ranking: the bigger, the better 
     ranked = accumulated_returns[accumulated_returns.rank(ascending=False)<= num_pf]
