@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from finml.data_reader import GetInitData, StockMarket
-from finml.portfolio_selection import lowVol
+from finml.portfolio_selection.single_factor import lowVol
 from finml.portfolio_optimization import SimpleMeanVariance
 
 # >>> Korean market
