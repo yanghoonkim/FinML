@@ -9,6 +9,7 @@ import lxml
 from lxml.html import fromstring
 
 from math import nan
+import numpy as np
 
 
 class GetInitData:
@@ -173,14 +174,14 @@ class GetInitData:
                 self.fss = pkl.load(f)
     
     
-    def calculate_returns(self, 
-                          interval='d', 
-                          start=datetime(2010, 1, 1), 
-                          end=datetime.now()):
+    def calculate_returns(self,
+                          interval='d',
+                          start=datetime(2010, 1, 1),
+                          end=datetime.now(),
+                          subset=None):
         ''' Calculate returns
         args:
             interval: 'd' (daily), 'w' (weekly), 'm' (monthly), and 'y' (annual)
-            initialize: if True, ignore calculated returns and initialize
         returns:
             returns: dataframe of float64
         '''
@@ -188,7 +189,7 @@ class GetInitData:
             raise ValueError('prices are not initialized')
         
         
-        prices = self.prices
+        prices = self.prices[subset] if subset is not None else self.prices
         prices = prices[start <= prices.index]
         prices = prices[prices.index <= end]
         
@@ -257,3 +258,31 @@ class GetInitData:
             print('Load indicators: %s' %indicators_path)
             with open(indicators_path, 'rb') as f:
                 self.indicators = pkl.load(f)
+        
+    
+    def get_mean_cov(self, 
+                     interval='d',
+                     start=datetime(2010, 1, 1),
+                     end=datetime.now(),
+                     subset=None):
+        ''' Calculate mean and covariance of returns
+        args:
+            interval: 'd' (daily), 'w' (weekly), 'm' (monthly), and 'y' (annual)
+            subset: a list of tickers
+        returns:
+            mean, variance
+        '''
+        returns = self.calculate_returns(interval, start, end, subset)
+        mean_returns = np.array(returns.mean(axis=0)).reshape(len(subset), 1)
+        covariance = np.array(returns.cov())
+        
+        return mean_returns, covariance
+    
+    def convert_to_date(self, last_nyears=1):
+        ''' Convert last_nyers to start date and end date
+        '''
+        num_days = str(last_nyears * 365) + 'D' # 365 includes holidays
+        start = self.prices.last(num_days).index[0]
+        end = datetime.now()
+        
+        return start, end
