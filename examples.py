@@ -11,6 +11,7 @@ kor_market.get_tickers() # Get a list of stock tickers
 kor_market.get_prices(start=datetime(2010,1,1), # Get price information (for all stocks)
                       end=datetime.now()) 
 kor_market.get_fs() # Get financial statements (for all stocks)
+kor_market.fs_cleansing(standard='005930')
 kor_market.calculate_indicators() # Calculate investment indicators
 
 # Portfolio selection
