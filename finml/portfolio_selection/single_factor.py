@@ -1,4 +1,6 @@
+from datetime import datetime
 from math import sqrt, nan
+import pandas as pd
 
 def lowVol(market, last_nyears=1, num_pf=30, interval='d'):
     ''' Portfolio selection based on low volatility (annualized)
@@ -33,9 +35,6 @@ def lowVol(market, last_nyears=1, num_pf=30, interval='d'):
     tickers = ranked.index
     
     return tickers
-
-from math import sqrt, nan
-
 
 
 def momentum(market, last_nyears=1, num_pf=30):
@@ -105,7 +104,7 @@ def riskAdj(market, last_nyears=1, num_pf=30, interval='d'):
 
 
 def indicator(market, ind, low_or_high, num_pf=30):
-    ''' Portfolio selection based on indicator
+    ''' Portfolio selection based on indicator (value investing)
     args:
         ind: name of indicator, such as ['per', 'pbr', 'pcr', 'psr']
         low_or_high: the lower(higher), the better, ['low', 'high']
@@ -119,6 +118,50 @@ def indicator(market, ind, low_or_high, num_pf=30):
     # Ranking: the bigger, the better 
     ascending = low_or_high == 'low'
     ranked = ind_value[ind_value.rank(ascending=ascending)<= num_pf]
+    tickers = ranked.index
+    
+    return tickers
+
+
+def fscore_kr(market, num_pf=30):
+    ''' Portfolio selection based on f-score (Piotroski et al., 2000) (quality investing)
+    '''
+    # Financial statement
+    fs  = market.fss
+    
+    # Probability
+    roa = fs['지배주주순이익'] / fs['자산']
+    cfo = fs['영업활동으로인한현금흐름'] / fs['자산']
+    accurual = cfo - roa
+    
+    # Financial performance
+    lev = fs['장기차입금'] / fs['자산']
+    liq = fs['유동자산'] / fs['유동부채']
+    offer = fs['유상증자'] # estimated
+
+    # Operating efficiency
+    margin = fs['매출총이익'] / fs['매출액']
+    turn = fs['매출액'] / fs['자산']
+
+    if datetime.now().month not in [1,2,3,4]:
+        col_idx = -1
+    else:
+        col_idx = -2
+
+    f_1 = (roa.iloc[:, [col_idx]] > 0).astype(int)
+    f_2 = (cfo.iloc[:, [col_idx]] > 0).astype(int)
+    f_3 = ((roa.iloc[:, [col_idx]] - roa.iloc[:, [col_idx-1]]) > 0).astype(int)
+    f_4 = (accurual.iloc[:, [col_idx]] > 0).astype(int)
+    f_5 = ((lev.iloc[:, [col_idx]] - lev.iloc[:, [col_idx-1]]) > 0).astype(int)
+    f_6 = ((liq.iloc[:, [col_idx]] - liq.iloc[:, [col_idx-1]]) > 0).astype(int)
+    f_7 = (offer.iloc[:, [col_idx]].isna() | (offer.iloc[:, [col_idx]] <= 0)).astype(int)
+    f_8 = ((margin.iloc[:, [col_idx]] - margin.iloc[:, [col_idx-1]]) > 0).astype(int)
+    f_9 = ((turn.iloc[:, [col_idx]] - turn.iloc[:, [col_idx-1]]) > 0).astype(int)
+
+    f_table = pd.concat([f_1, f_2, f_3, f_4, f_5, f_6, f_7, f_8, f_9], axis=1)
+    f_score = f_table.sum(axis=1) 
+    
+    ranked = f_score[f_score.rank(method='min', ascending=False) <= num_pf].sample(num_pf)
     tickers = ranked.index
     
     return tickers

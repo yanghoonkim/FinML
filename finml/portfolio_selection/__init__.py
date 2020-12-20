@@ -1,1 +1,1 @@
-from finml.portfolio_selection.single_factor import lowVol, momentum, riskAdj, indicator
+from finml.portfolio_selection.single_factor import lowVol, momentum, riskAdj, indicator, fscore_kr
