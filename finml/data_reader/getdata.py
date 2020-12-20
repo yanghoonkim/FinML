@@ -212,7 +212,9 @@ class GetInitData:
             
             with open(fss_path, 'wb') as f:
                 pkl.dump(self.fss, f)
-                        
+            
+            print('Complete!')
+
         else:
             print('Load financial statements: %s' %fss_path)
             with open(fss_path, 'rb') as f:
