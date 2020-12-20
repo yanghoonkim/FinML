@@ -21,7 +21,7 @@ class GetInitData:
         self.source = source
         self.tickers = None
         self.prices = pd.DataFrame()
-        self.fss = pd.DataFrame()
+        self.fss = dict()
         self.indicators = pd.DataFrame()
         
         self.data_path = os.path.join(data_path, self.source)
@@ -110,7 +110,6 @@ class GetInitData:
             raise ValueError('ticker is not initialized')
         
         fs_path = os.path.join(self.data_path, 'fs')
-        fss_path = os.path.join(self.data_path, 'fss.pkl')
         
         if not os.path.exists(fs_path):
             os.mkdir(fs_path)
@@ -131,6 +130,8 @@ class GetInitData:
                     # [5]: Statement of cash flow (quarterly)
                     try:
                         fs_tables = pd.read_html(fs_page.text, displayed_only=False)
+                        if len(fs_tables) != 6:
+                            fs_tables.pop(2)
                     except: 
                         print('Error in ticker: %s' %ticker)
                         continue
@@ -157,22 +158,66 @@ class GetInitData:
                     
                     with open(os.path.join(fs_path, ticker)+'.pkl', 'wb') as f:
                         pkl.dump(fs_data, f)
-                    last_fs = fs_data.iloc[:, [-1]]
-                    last_fs.index.name = 'index'
-                    last_fs.columns = [ticker]
-                    
-                    self.fss = pd.concat([self.fss, last_fs], axis=1)
-                
-                with open(fss_path, 'wb') as f:
-                    pkl.dump(self.fss, f)
                         
             print('Complete!')
             
         else:
-            print('Load financial statement (last year): %s' %fss_path)
+            print('Financial statements exists: %s' %fs_path)
+
+                
+    def fs_cleansing(self, standard='005930', initialize=False):
+        ''' Get refined financial statement with pandas
+        args:
+            initialize: if True, ignore existing financial statement (fss.pkl) data and initialize
+            standard: elements of financial statement are selected based on the given standard
+        '''
+        if self.tickers is None:
+            raise ValueError('ticker is not initialized')
+        fs_path = os.path.join(self.data_path, 'fs')
+        fss_path = os.path.join(self.data_path, 'fss.pkl')
+        
+        # Get element list based on the given standard ticker
+        with open(os.path.join(fs_path, standard)+'.pkl', 'rb') as f:
+            standard_fs = pkl.load(f)
+        standard_date = standard_fs.columns
+        standard_elements = standard_fs.index
+        years = [date.split('/')[0] for date in standard_fs.columns]
+
+        for item in standard_elements:
+            self.fss[item] = pd.DataFrame(columns=standard_date)
+        
+        if not os.path.exists(fss_path) or initialize == True:
+            print('Cleansing financial statements ...', end='')
+            if self.source == 'krx':
+                for ticker in tqdm(self.tickers['종목코드']):
+                    try:
+                        path = os.path.join(fs_path, ticker)+'.pkl'
+                        with open(path, 'rb') as f:
+                            fs_data = pkl.load(f)
+
+                        if (fs_data.columns != standard_date).any():
+                            print('Financial statement is not complete: %s'%ticker)
+                            for element in standard_elements:
+                                self.fss[element].loc[ticker] = nan
+
+                        else:
+                            for element in standard_elements:
+                                if element in fs_data.index:
+                                    self.fss[element].loc[ticker] = fs_data.loc[element]
+                                else:
+                                    self.fss[element].loc[ticker] = nan
+
+                    except:
+                        print('Not exists: %s'%ticker)
+            
+            with open(fss_path, 'wb') as f:
+                pkl.dump(self.fss, f)
+                        
+        else:
+            print('Load financial statements: %s' %fss_path)
             with open(fss_path, 'rb') as f:
-                self.fss = pkl.load(f)
-    
+                self.fss = pkl.load(f)        
+            
     
     def calculate_returns(self,
                           interval='d',
