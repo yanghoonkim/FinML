@@ -241,7 +241,7 @@ class GetInitData:
         prices = prices[prices.index <= end]
         
         # Calculate return (related to the given time interval)
-        returns = prices.resample(interval).ffill().pct_change()
+        returns = prices.pct_change() if interval=='d' else prices.resample(interval).ffill().pct_change()
         returns = returns.dropna(axis=0, how='all')
             
         return returns
