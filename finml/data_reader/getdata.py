@@ -66,7 +66,7 @@ class GetInitData:
                    start=datetime(2010, 1, 1), 
                    end=datetime.now(), 
                    initialize=False):
-        ''' Get stock prices with pandas-datareader
+        ''' Get stock prices & market indices with pandas-datareader
         args:
             initialize: if True, ignore existing price data and initialize 
         '''
@@ -82,7 +82,7 @@ class GetInitData:
         if not os.path.exists(prices_path) or initialize == True:
             print('Get prices from [naver] ...', end='')
             if self.source == 'krx':
-                for ticker in tqdm(self.tickers['종목코드']):
+                for ticker in tqdm(list(self.tickers['종목코드'])+['KOSPI', 'KPI200', 'KOSDAQ']):
                     price_data = pdr.DataReader(ticker, 'naver', start=start, end=end)[['Close']]
                     price_data = price_data.rename(columns={'Close': ticker})
                     price_data = price_data.astype('float64')
