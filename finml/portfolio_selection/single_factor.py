@@ -123,8 +123,10 @@ def indicator(market, ind, low_or_high, num_pf=30):
     return tickers
 
 
-def fscore_kr(market, num_pf=30):
+def fscore_kr(market, scores=[9]):
     ''' Portfolio selection based on f-score (Piotroski et al., 2000) (quality investing)
+    args:
+        scores: stocks with the given scores are returned
     '''
     # Financial statement
     fs  = market.fss
@@ -148,20 +150,21 @@ def fscore_kr(market, num_pf=30):
     else:
         col_idx = -2
 
-    f_1 = (roa.iloc[:, [col_idx]] > 0).astype(int)
-    f_2 = (cfo.iloc[:, [col_idx]] > 0).astype(int)
-    f_3 = ((roa.iloc[:, [col_idx]] - roa.iloc[:, [col_idx-1]]) > 0).astype(int)
-    f_4 = (accurual.iloc[:, [col_idx]] > 0).astype(int)
-    f_5 = ((lev.iloc[:, [col_idx]] - lev.iloc[:, [col_idx-1]]) > 0).astype(int)
-    f_6 = ((liq.iloc[:, [col_idx]] - liq.iloc[:, [col_idx-1]]) > 0).astype(int)
-    f_7 = (offer.iloc[:, [col_idx]].isna() | (offer.iloc[:, [col_idx]] <= 0)).astype(int)
-    f_8 = ((margin.iloc[:, [col_idx]] - margin.iloc[:, [col_idx-1]]) > 0).astype(int)
-    f_9 = ((turn.iloc[:, [col_idx]] - turn.iloc[:, [col_idx-1]]) > 0).astype(int)
+    f_1 = (roa.iloc[:, col_idx] > 0).astype(int)
+    f_2 = (cfo.iloc[:, col_idx] > 0).astype(int)
+    f_3 = ((roa.iloc[:, col_idx] - roa.iloc[:, col_idx-1]) > 0).astype(int)
+    f_4 = (accurual.iloc[:, col_idx] > 0).astype(int)
+    f_5 = ((lev.iloc[:, col_idx] - lev.iloc[:, col_idx-1]) <= 0).astype(int)
+    f_6 = ((liq.iloc[:, col_idx] - liq.iloc[:, col_idx-1]) > 0).astype(int)
+    f_7 = (offer.iloc[:, col_idx].isna() | (offer.iloc[:, col_idx] <= 0)).astype(int)
+    f_8 = ((margin.iloc[:, col_idx] - margin.iloc[:, col_idx-1]) > 0).astype(int)
+    f_9 = ((turn.iloc[:, col_idx] - turn.iloc[:, col_idx-1]) > 0).astype(int)
 
     f_table = pd.concat([f_1, f_2, f_3, f_4, f_5, f_6, f_7, f_8, f_9], axis=1)
     f_score = f_table.sum(axis=1) 
     
-    ranked = f_score[f_score.rank(method='min', ascending=False) <= num_pf].sample(num_pf)
-    tickers = ranked.index
+    tickers = pd.Series()
+    for score in scores:
+        tickers = tickers.append(f_score[f_score == score])
     
     return tickers
