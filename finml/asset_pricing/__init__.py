@@ -1,0 +1,1 @@
+from finml.asset_pricing.CAPM import CAPM
