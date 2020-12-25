@@ -3,6 +3,7 @@ from datetime import datetime
 from finml.data_reader import GetInitData, StockMarket
 from finml.portfolio_selection.single_factor import lowVol
 from finml.portfolio_optimization import SimpleMeanVariance
+from finml.asset_pricing import CAPM
 
 # >>> Korean market
 # Get initial data (For the first time, this will takes about an hour)
@@ -15,21 +16,31 @@ kor_market.fs_cleansing(standard='005930')
 kor_market.calculate_indicators() # Calculate investment indicators
 
 # Portfolio selection
-stock_list = lowVol(market=kor_market, 
-                    last_nyears=1, 
-                    num_pf=30, 
-                    interval='d')
+stock_list = lowVol(
+        market=kor_market,
+        last_nyears=1,
+        num_pf=30,
+        interval='d')
 
 start, end = kor_market.convert_to_date(last_nyears=1)
-mean, cov = kor_market.get_mean_cov(interval='d',
-                                    start=start,
-                                    end=end,
-                                    subset=stock_list)
+mean, cov = kor_market.get_mean_cov(
+        interval='d',
+        start=start,
+        end=end,
+        subset=stock_list)
 
 # Portfolio optimization
 SMV = SimpleMeanVariance(mean, cov)
 SMV.plot(show=True, save_path='simple_mean_variance.jpeg')
 
+# CAPM
+returns, betas, alphas = CAPM(
+        market = kor_market, 
+        stock_tickers = stock_list, 
+        index_ticker = 'KPI200', 
+        risk_free = 0, 
+        start = start,
+        end = end)
 
 # >>> American market
 '''

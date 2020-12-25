@@ -19,7 +19,6 @@ def CAPM(market, stock_tickers, index_ticker, risk_free, start, end):
     index_returns = market.calculate_returns(start=start, subset=[index_ticker]).squeeze()
 
     
-    
     # Calculate Beta for a portfolio of stocks
     beta = dict()
     alpha = dict()
