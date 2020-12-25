@@ -3,7 +3,6 @@ from datetime import datetime
 from finml.data_reader import GetInitData, StockMarket
 from finml.portfolio_selection.single_factor import lowVol
 from finml.portfolio_optimization import SimpleMeanVariance
-from finml.asset_pricing import CAPM
 
 # >>> Korean market
 # Get initial data (For the first time, this will takes about an hour)
@@ -34,6 +33,7 @@ SMV = SimpleMeanVariance(mean, cov)
 SMV.plot(show=True, save_path='simple_mean_variance.jpeg')
 
 # CAPM
+from finml.asset_pricing import CAPM
 returns, betas, alphas = CAPM(
         market = kor_market, 
         stock_tickers = stock_list, 
@@ -41,6 +41,12 @@ returns, betas, alphas = CAPM(
         risk_free = 0, 
         start = start,
         end = end)
+
+# Fama French 3 factor model
+from finml.asset_pricing import FamaFrench3
+FamaFrench3(
+        market=kor_market,
+        ticker='005930')
 
 # >>> American market
 '''
