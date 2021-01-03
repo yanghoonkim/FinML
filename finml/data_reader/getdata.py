@@ -26,7 +26,7 @@ class GetInitData:
         
         self.data_path = os.path.join(data_path, self.source)
         if not os.path.exists(self.data_path):
-            os.mkdir(self.data_path)
+            os.makedirs(self.data_path)
     
     def get_tickers(self, initialize=False):
         ''' Get tickers from the given source
@@ -77,7 +77,7 @@ class GetInitData:
         prices_path = os.path.join(self.data_path, 'prices.pkl')
         
         if not os.path.exists(price_path):
-            os.mkdir(price_path)
+            os.makedirs(price_path)
             
         if not os.path.exists(prices_path) or initialize == True:
             print('Get prices from [naver] ...', end='')
@@ -112,7 +112,7 @@ class GetInitData:
         fs_path = os.path.join(self.data_path, 'fs')
         
         if not os.path.exists(fs_path):
-            os.mkdir(fs_path)
+            os.makedirs(fs_path)
         
         if len(os.listdir(fs_path)) == 0 or initialize == True:
             print('Get financial statements from [fnguide] ...', end='')
@@ -260,7 +260,7 @@ class GetInitData:
         indicators_path = os.path.join(self.data_path, 'indicators.pkl')
         
         if not os.path.exists(indicator_path):
-            os.mkdir(indicator_path)
+            os.makedirs(indicator_path)
         
         if not os.path.exists(indicators_path) or initialize == True:
             print('Calculate investment indicators ...')
