@@ -8,14 +8,12 @@ import pandas_datareader as pdr
 
 
 class StockMarket:
-    def __init__(self, start_date=datetime(2010, 1, 1), end_date=datetime.now()):
+    def __init__(self, start_date=datetime(2010, 1, 1), end_date=datetime.now(), data_dir='data'):
         self.start_date = start_date
         self.end_date = end_date
         self.price_data = dict()
 
-        self.pwd = os.getcwd()
-        self.data_path = os.path.join(self.pwd, 'data')
-        if not os.path.exists(self.data_path): os.makedirs(self.data_path)
+        self.data_dir = data_dir
 
     def get_stock_price(self, symbols, log_return=True):
         '''
@@ -25,16 +23,16 @@ class StockMarket:
         '''
         # File name starts with dates
         prefix = datetime.now().strftime('%Y%m%d')
-        done_list = [file.split('.')[0] for file in os.listdir(self.data_path)]
+        done_list = [file.split('.')[0] for file in os.listdir(self.data_dir)]
         
         # Load price data: if not exists, download with pdr.DataReader
         for symbol in symbols:
             if prefix+symbol in done_list:
-                with open(os.path.join(self.data_path, prefix+symbol+'.pkl'), 'rb') as f:
+                with open(os.path.join(self.data_dir, prefix+symbol+'.pkl'), 'rb') as f:
                     price_data = pkl.load(f)
             else:
                 price_data = pdr.DataReader(symbol, 'yahoo', start=datetime(2000,1,1), end=self.end_date)
-                with open(os.path.join(self.data_path, prefix+symbol+'.pkl'), 'wb') as f:
+                with open(os.path.join(self.data_dir, prefix+symbol+'.pkl'), 'wb') as f:
                     pkl.dump(price_data, f)
             
             price_data = price_data[self.start_date <= price_data.index]

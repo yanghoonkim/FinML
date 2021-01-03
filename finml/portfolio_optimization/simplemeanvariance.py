@@ -1,5 +1,7 @@
 ''' Essential packages '''
 import numpy as np
+import os
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 class SimpleMeanVariance:
@@ -53,7 +55,10 @@ class SimpleMeanVariance:
         plt.ylabel('mean')
 
         if save_path:
-            plt.savefig(save_path)
+            if save_path.split('.')[-1].lower() in ['png', 'jpg', 'jpeg', 'bmp']:
+                plt.savefig(save_path)
+            else:
+                plt.savefig(os.path.join(save_path, str(datetime.now())[:6] + 'simple_mean_variance.jpg'))
 
         if show:
             plt.show()
