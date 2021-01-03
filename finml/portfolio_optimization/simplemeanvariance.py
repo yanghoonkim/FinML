@@ -58,7 +58,7 @@ class SimpleMeanVariance:
             if save_path.split('.')[-1].lower() in ['png', 'jpg', 'jpeg', 'bmp']:
                 plt.savefig(save_path)
             else:
-                plt.savefig(os.path.join(save_path, str(datetime.now())[:6] + 'simple_mean_variance.jpg'))
+                plt.savefig(os.path.join(save_path, str(datetime.now())[:10] + '_simple_mean_variance.jpg'))
 
         if show:
             plt.show()
