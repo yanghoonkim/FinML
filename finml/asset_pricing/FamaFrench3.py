@@ -1,10 +1,12 @@
+from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from finml.utils import GoogleDriveDownloader
+import statsmodels.formula.api as smf
 #from sklearn.linear_model import LinearRegression
 
 def FamaFrench3(market, ticker, plot_return=False):
-    ticker_return = kor_market.calculate_returns(subset=[ticker])
+    ticker_return = market.calculate_returns(subset=[ticker])
     ticker_return = ticker_return.rename(columns={ticker:'T'+ticker})
     
     # Fama French 3 factor in korea daily return (kospi & kosdaq)
