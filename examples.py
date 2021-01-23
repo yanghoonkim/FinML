@@ -43,10 +43,11 @@ returns, betas, alphas = CAPM(
         end = end)
 
 # Fama French 3 factor model
-from finml.asset_pricing import FamaFrench3_statsmodels
-FamaFrench3_statsmodels(
+from finml.asset_pricing import FamaFrench3
+FamaFrench3(
         market=kor_market,
         ticker='005930',
+        tools='statsmodels',
         plot_return=True)
 
 # >>> American market

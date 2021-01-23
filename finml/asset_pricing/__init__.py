@@ -1,3 +1,2 @@
 from finml.asset_pricing.CAPM import CAPM
-from finml.asset_pricing.FamaFrench3 import FamaFrench3_statsmodels
-from finml.asset_pricing.FamaFrench3 import FamaFrench3_sklearn_lr
+from finml.asset_pricing.FamaFrench3 import FamaFrench3
