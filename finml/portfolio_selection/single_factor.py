@@ -128,6 +128,8 @@ def fscore_kr(market, scores=[9]):
     args:
         scores: stocks with the given scores are returned
     '''
+    print('Attention: you have to keep financial statements up-to-date!')
+
     # Financial statement
     fs  = market.fss
     
@@ -167,4 +169,5 @@ def fscore_kr(market, scores=[9]):
     for score in scores:
         tickers = tickers.append(f_score[f_score == score])
     
+    tickers = tickers.index
     return tickers
