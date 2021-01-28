@@ -125,8 +125,8 @@ def FamaMacbeth_linearmodels(ff3, returns, plot_return=False):
 def FamaMacbeth_statsmodels(ff3, returns, plot_return=False):
     # First stage: N-time-series regression, one for each asset or portfolio, of its excess returns on the ff3 to estimate the factor loadings
     betas = []
-    for stock in returns:
-        beta = OLS(endog=returns.loc[returns.index, stock], 
+    for equity in returns:
+        beta = OLS(endog=returns.loc[returns.index, equity], 
                     exog=add_constant(ff3), missing='drop').fit()
         betas.append(beta.params.drop('const'))
     betas = pd.DataFrame(betas, 
