@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from finml.utils import GoogleDriveDownloader
 import statsmodels.formula.api as smf
 from sklearn.linear_model import LinearRegression
+from statsmodels.api import OLS, add_constant
 from linearmodels.asset_pricing import LinearFactorModel
 
 plt.style.use('ggplot')
@@ -77,7 +78,7 @@ def FamaFrench3_sklearn_lr(ff3, ticker_return, plot_return=False):
     print('|\t|\t%.3f\t|\t%.3f\t|\t%.3f\t|'%(mlr.coef_[0][0], mlr.coef_[0][1], mlr.coef_[0][2]))
     
 
-def FamaMacbeth(market, tickers, plot_return=False):
+def FamaMacbeth(market, tickers, tools='statsmodels', plot_return=False):
     ''' Implementation of Fama-Macbeth regression
     args:
 
@@ -97,6 +98,8 @@ def FamaMacbeth(market, tickers, plot_return=False):
     ff3.index = [datetime.strptime(idx, '%Y-%m-%d') for idx in ff3.index]
     ff3.index.name='Date'
     ff3 = ff3.rename(columns={'Mkt-Rf': 'Mkt'})
+    
+    
     ff3 = ff3.drop(['Rf'], axis=1)
     ff3_m = ff3.resample('m').ffill().pct_change()
     
@@ -106,7 +109,33 @@ def FamaMacbeth(market, tickers, plot_return=False):
     portfolio_returns_ = portfolio_returns.loc[intersection, :]
     ff3_m_ = ff3_m.loc[intersection, :]
     
-    mod = LinearFactorModel(portfolios=portfolio_returns_, 
-                        factors=ff3_m_)
+    if tools == 'linearmodels':
+        return FamaMacbeth_linearmodels(ff3_m_, portfolio_returns_, plot_return)
+    elif tools == 'statsmodels':
+        return FamaMacbeth_statsmodels(ff3_m_, portfolio_returns_, plot_return)
+
+    
+def FamaMacbeth_linearmodels(ff3, returns, plot_return=False):
+    mod = LinearFactorModel(portfolios=returns, 
+                        factors=ff3)
     res = mod.fit()
-    print(res)
+    return res
+    
+    
+def FamaMacbeth_statsmodels(ff3, returns, plot_return=False):
+    # First stage: N-time-series regression, one for each asset or portfolio, of its excess returns on the ff3 to estimate the factor loadings
+    betas = []
+    for stock in returns:
+        beta = OLS(endog=returns.loc[returns.index, stock], 
+                    exog=add_constant(ff3), missing='drop').fit()
+        betas.append(beta.params.drop('const'))
+    betas = pd.DataFrame(betas, 
+                         columns=ff3.columns, 
+                         index=returns.columns)
+    # Second stage: T cross-sectional regression, one for each time period, to estimate the risk premium
+    lambdas = list()
+    for period in returns.index:
+        lmda = OLS(endog=returns.loc[period, betas.index], 
+                    exog=betas, missing='drop').fit()
+        lambdas.append(lmda.params)
+    return betas, lambdas
