@@ -21,6 +21,7 @@ class GetInitData:
         self.source = source
         self.tickers = None
         self.prices = pd.DataFrame()
+        self.volumes = pd.DataFrame()
         self.fss = dict()
         self.indicators = pd.DataFrame()
         
@@ -62,11 +63,11 @@ class GetInitData:
                 self.tickers = pkl.load(f)
             
         
-    def get_prices(self, 
+    def get_prices_and_volumes(self, 
                    start=datetime(2010, 1, 1), 
                    end=datetime.now(), 
                    initialize=False):
-        ''' Get stock prices & market indices with pandas-datareader
+        ''' Get stock prices & volumes with pandas-datareader
         args:
             initialize: if True, ignore existing price data and initialize 
         '''
@@ -75,30 +76,46 @@ class GetInitData:
         
         price_path = os.path.join(self.data_path, 'price')
         prices_path = os.path.join(self.data_path, 'prices.pkl')
+        volume_path = os.path.join(self.data_path, 'volume')
+        volumes_path = os.path.join(self.data_path, 'volumes.pkl')
         
         if not os.path.exists(price_path):
             os.makedirs(price_path)
+        
+        if not os.path.exists(volume_path):
+            os.makedirs(volume_path)
             
         if not os.path.exists(prices_path) or initialize == True:
-            print('Get prices from [naver] ...', end='')
+            print('Get prices/volumes from [naver] ...', end='')
             if self.source == 'krx':
                 for ticker in tqdm(list(self.tickers['종목코드'])+['KOSPI', 'KPI200', 'KOSDAQ']):
-                    price_data = pdr.DataReader(ticker, 'naver', start=start, end=end)[['Close']]
-                    price_data = price_data.rename(columns={'Close': ticker})
-                    price_data = price_data.astype('float64')
+                    cv = pdr.DataReader(ticker, 'naver', start=start, end=end)[['Close', 'Volume']]
+                    cv = cv.astype('float64')
+                    price_data = cv[['Close']].rename(columns={'Close': ticker})
+                    volume_data = cv[['Volume']].rename(columns={'Volume': ticker})
+
                     with open(os.path.join(price_path, ticker)+'.pkl', 'wb') as f:
                         pkl.dump(price_data, f)
+                    with open(os.path.join(volume_path, ticker)+'.pkl', 'wb') as f:
+                        pkl.dump(volume_data, f)
                     self.prices = pd.concat([self.prices, price_data], axis=1)
+                    self.volumes = pd.concat([self.volumes, volume_data], axis=1)
                 self.prices = self.prices.astype('float64')
+                self.volumes = self.volumes.astype('float64')
                 
             with open(prices_path, 'wb') as f:
                 pkl.dump(self.prices, f)
+            with open(volumes_path, 'wb') as f:
+                pkl.dump(self.volumes, f)
+                
             print('Complete!')
                     
         else:
-            print('Load prices: %s' %prices_path)
+            print('Load prices & volumes: %s & %s' %(prices_path, volumes_path))
             with open(prices_path, 'rb') as f:
                 self.prices = pkl.load(f)
+            with open(volumes_path, 'rb') as f:
+                self.volumes = pkl.load(f)
                 
     
     def get_fs(self, initialize=False):
