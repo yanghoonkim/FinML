@@ -6,14 +6,10 @@ Machine Learning Library for Finance
 git clone https://github.com/yanghoonkim/FinML.git
 ```
 
-# Quick start
-```
-python3 examples.py
-```
-
 # Notebooks
 |    |  설명  | Cola  |
 | ---| ------| ----- |
-| Simple mean-variance   |     종목을 입력하여 simple mean-variance의 efficient frontier를 그려본다    |         [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/yanghoonkim/FinML/blob/main/notebooks/simple_mean_variance.ipynb) |
+| Tutorial | A series of simple examples to utilize FinML package | [![Open In Colab](https://colab.research.google.com/github/yanghoonkim/FinML/blob/main/notebooks/tutorial.ipynb) |
+| Simple mean-variance   |     Simple mean-variance analysis (plotting efficient frontier)   |         [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/yanghoonkim/FinML/blob/main/notebooks/simple_mean_variance.ipynb) |
 
 
