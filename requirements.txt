@@ -7,3 +7,4 @@ dateparser
 scikit-learn
 statsmodels
 linearmodels
+TA-Lib

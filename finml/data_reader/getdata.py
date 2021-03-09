@@ -150,7 +150,7 @@ class GetInitData:
                         if len(fs_tables) != 6:
                             fs_tables.pop(2)
                     except: 
-                        print('Error in ticker: %s' %ticker)
+                        print('No indicator calculated in ticker: %s' %ticker)
                         continue
                     
                     # We only use annual information
@@ -284,10 +284,15 @@ class GetInitData:
             if self.source == 'krx':
                 for ticker in tqdm(self.tickers['종목코드']):
                     try:
-                        fs_data = self.fss.loc[:,[ticker]]
-                        last_col = fs_data.columns[-1]
-                        earnings = '지배주주순이익' if '지배주주순이익' in fs_data.index else '당기순이익'
-                        denominator = fs_data.loc[[earnings, '자본', '영업활동으로인한현금흐름', '매출액'], [last_col]]
+                        earning = self.fss['지배주주순이익'].loc[ticker][-1]
+                        book = self.fss['자본'].loc[ticker][-1]
+                        cashflow = self.fss['영업활동으로인한현금흐름'].loc[ticker][-1]
+                        sale = self.fss['매출액'].loc[ticker][-1]
+                        denominator = pd.DataFrame([earning, book, cashflow, sale])
+                        #fs_data = self.fss.loc[:,[ticker]]
+                        #last_col = fs_data.columns[-1]
+                        #earnings = '지배주주순이익' if '지배주주순이익' in fs_data.index else '당기순이익'
+                        #denominator = fs_data.loc[[earnings, '자본', '영업활동으로인한현금흐름', '매출액'], [last_col]]
 
                         url = 'http://comp.fnguide.com/SVO2/ASP/SVD_main.asp?pGB=1&gicode=A%s' %ticker
                         page = requests.get(url)
