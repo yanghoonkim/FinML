@@ -150,7 +150,7 @@ class GetInitData:
                         if len(fs_tables) != 6:
                             fs_tables.pop(2)
                     except: 
-                        print('No indicator calculated in ticker: %s' %ticker)
+                        print('No indicator calculated with ticker: %s' %ticker)
                         continue
                     
                     # We only use annual information
